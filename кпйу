@@ -2437,250 +2437,267 @@ end)
 -- Вкладка Чат между юзерами
 -- ==============================================================================
 -- ==============================================================================
--- Вкладка Скрытый Чат между юзерами (БЕЗ использования чата Roblox)
+-- Вкладка Скрытый Чат между юзерами (Оптимизировано под лимит 200 регистров)
 -- ==============================================================================
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
 local ChatPage = Pages.UserChat
 
-local ChatHeader = Instance.new("TextLabel")
-ChatHeader.Size = UDim2.new(1, -8, 0, 18)
-ChatHeader.BackgroundTransparency = 1
-ChatHeader.ZIndex = 3
-ChatHeader.Text = "💬 СКРЫТЫЙ ЧАТ ХАБА (P2P):"
-ChatHeader.Font = Enum.Font.GothamBold
-ChatHeader.TextSize = 11
-ChatHeader.TextXAlignment = Enum.TextXAlignment.Left
-ChatHeader.TextColor3 = Color3.fromRGB(220, 180, 255)
-ChatHeader.Parent = ChatPage
+-- Хранилище ссылок на нужные элементы без лишних локальных переменных
+local UI = {}
 
-local ChatSubHeader = Instance.new("TextLabel")
-ChatSubHeader.Size = UDim2.new(1, -8, 0, 14)
-ChatSubHeader.Position = UDim2.new(0, 0, 0, 18)
-ChatSubHeader.BackgroundTransparency = 1
-ChatSubHeader.ZIndex = 3
-ChatSubHeader.Text = "🔒 Сообщения не идут в чат Роблокса. Видят только юзеры скрипта."
-ChatSubHeader.Font = Enum.Font.GothamMedium
-ChatSubHeader.TextSize = 9
-ChatSubHeader.TextXAlignment = Enum.TextXAlignment.Left
-ChatSubHeader.TextColor3 = Color3.fromRGB(170, 140, 210)
-ChatSubHeader.Parent = ChatPage
+do
+    local header = Instance.new("TextLabel")
+    header.Size = UDim2.new(1, -8, 0, 18)
+    header.BackgroundTransparency = 1
+    header.ZIndex = 3
+    header.Text = "💬 СКРЫТЫЙ ЧАТ ХАБА (P2P / CLOUD):"
+    header.Font = Enum.Font.GothamBold
+    header.TextSize = 11
+    header.TextXAlignment = Enum.TextXAlignment.Left
+    header.TextColor3 = Color3.fromRGB(220, 180, 255)
+    header.Parent = ChatPage
 
-local ChatBoxContainer = Instance.new("Frame")
-ChatBoxContainer.Size = UDim2.new(1, -8, 1, -78)
-ChatBoxContainer.Position = UDim2.new(0, 0, 0, 36)
-ChatBoxContainer.BackgroundColor3 = Color3.fromRGB(25, 12, 45)
-ChatBoxContainer.BackgroundTransparency = 0.6
-ChatBoxContainer.BorderSizePixel = 0
-ChatBoxContainer.ZIndex = 3
-ChatBoxContainer.Parent = ChatPage
+    local subHeader = Instance.new("TextLabel")
+    subHeader.Size = UDim2.new(1, -8, 0, 14)
+    subHeader.Position = UDim2.new(0, 0, 0, 18)
+    subHeader.BackgroundTransparency = 1
+    subHeader.ZIndex = 3
+    subHeader.Text = "🔒 Сообщения не идут в чат Роблокса. Видят только юзеры скрипта."
+    subHeader.Font = Enum.Font.GothamMedium
+    subHeader.TextSize = 9
+    subHeader.TextXAlignment = Enum.TextXAlignment.Left
+    subHeader.TextColor3 = Color3.fromRGB(170, 140, 210)
+    subHeader.Parent = ChatPage
 
-local ChatBoxCorner = Instance.new("UICorner")
-ChatBoxCorner.CornerRadius = UDim.new(0, 6)
-ChatBoxCorner.Parent = ChatBoxContainer
+    local boxContainer = Instance.new("Frame")
+    boxContainer.Size = UDim2.new(1, -8, 1, -78)
+    boxContainer.Position = UDim2.new(0, 0, 0, 36)
+    boxContainer.BackgroundColor3 = Color3.fromRGB(25, 12, 45)
+    boxContainer.BackgroundTransparency = 0.6
+    boxContainer.BorderSizePixel = 0
+    boxContainer.ZIndex = 3
+    boxContainer.Parent = ChatPage
 
-local ChatScrolling = Instance.new("ScrollingFrame")
-ChatScrolling.Size = UDim2.new(1, -8, 1, -8)
-ChatScrolling.Position = UDim2.new(0, 4, 0, 4)
-ChatScrolling.BackgroundTransparency = 1
-ChatScrolling.BorderSizePixel = 0
-ChatScrolling.ZIndex = 4
-ChatScrolling.CanvasSize = UDim2.new(0, 0, 0, 0)
-ChatScrolling.ScrollBarThickness = 4
-ChatScrolling.ScrollBarImageColor3 = Color3.fromRGB(170, 60, 255)
-ChatScrolling.AutomaticCanvasSize = Enum.AutomaticSize.Y
-ChatScrolling.Parent = ChatBoxContainer
+    local boxCorner = Instance.new("UICorner")
+    boxCorner.CornerRadius = UDim.new(0, 6)
+    boxCorner.Parent = boxContainer
 
-local ChatLayout = Instance.new("UIListLayout")
-ChatLayout.SortOrder = Enum.SortOrder.LayoutOrder
-ChatLayout.Padding = UDim.new(0, 5)
-ChatLayout.Parent = ChatScrolling
+    UI.Scrolling = Instance.new("ScrollingFrame")
+    UI.Scrolling.Size = UDim2.new(1, -8, 1, -8)
+    UI.Scrolling.Position = UDim2.new(0, 4, 0, 4)
+    UI.Scrolling.BackgroundTransparency = 1
+    UI.Scrolling.BorderSizePixel = 0
+    UI.Scrolling.ZIndex = 4
+    UI.Scrolling.CanvasSize = UDim2.new(0, 0, 0, 0)
+    UI.Scrolling.ScrollBarThickness = 4
+    UI.Scrolling.ScrollBarImageColor3 = Color3.fromRGB(170, 60, 255)
+    UI.Scrolling.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    UI.Scrolling.Parent = boxContainer
 
-local InputContainer = Instance.new("Frame")
-InputContainer.Size = UDim2.new(1, -8, 0, 34)
-InputContainer.Position = UDim2.new(0, 0, 1, -36)
-InputContainer.BackgroundColor3 = Color3.fromRGB(25, 12, 45)
-InputContainer.BackgroundTransparency = 0.5
-InputContainer.BorderColor3 = Color3.fromRGB(140, 50, 255)
-InputContainer.BorderSizePixel = 1
-InputContainer.ZIndex = 3
-InputContainer.Parent = ChatPage
+    local layout = Instance.new("UIListLayout")
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 5)
+    layout.Parent = UI.Scrolling
 
-local InputCorner = Instance.new("UICorner")
-InputCorner.CornerRadius = UDim.new(0, 6)
-InputCorner.Parent = InputContainer
+    local inputContainer = Instance.new("Frame")
+    inputContainer.Size = UDim2.new(1, -8, 0, 34)
+    inputContainer.Position = UDim2.new(0, 0, 1, -36)
+    inputContainer.BackgroundColor3 = Color3.fromRGB(25, 12, 45)
+    inputContainer.BackgroundTransparency = 0.5
+    inputContainer.BorderColor3 = Color3.fromRGB(140, 50, 255)
+    inputContainer.BorderSizePixel = 1
+    inputContainer.ZIndex = 3
+    inputContainer.Parent = ChatPage
 
-local ChatTextBox = Instance.new("TextBox")
-ChatTextBox.Size = UDim2.new(1, -44, 1, 0)
-ChatTextBox.Position = UDim2.new(0, 8, 0, 0)
-ChatTextBox.BackgroundTransparency = 1
-ChatTextBox.ClearTextOnFocus = false
-ChatTextBox.Font = Enum.Font.GothamMedium
-ChatTextBox.PlaceholderText = "Скрытое сообщение юзерам хаба..."
-ChatTextBox.PlaceholderColor3 = Color3.fromRGB(160, 130, 200)
-ChatTextBox.Text = ""
-ChatTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-ChatTextBox.TextSize = 11
-ChatTextBox.TextXAlignment = Enum.TextXAlignment.Left
-ChatTextBox.ZIndex = 4
-ChatTextBox.Parent = InputContainer
+    local inputCorner = Instance.new("UICorner")
+    inputCorner.CornerRadius = UDim.new(0, 6)
+    inputCorner.Parent = inputContainer
 
-local SendMsgBtn = Instance.new("TextButton")
-SendMsgBtn.Size = UDim2.new(0, 32, 0, 26)
-SendMsgBtn.Position = UDim2.new(1, -34, 0.5, -13)
-SendMsgBtn.BackgroundColor3 = Color3.fromRGB(70, 20, 120)
-SendMsgBtn.BackgroundTransparency = 0.2
-SendMsgBtn.BorderColor3 = Color3.fromRGB(190, 80, 255)
-SendMsgBtn.BorderSizePixel = 1
-SendMsgBtn.Text = "➤"
-SendMsgBtn.Font = Enum.Font.GothamBold
-SendMsgBtn.TextSize = 14
-SendMsgBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-SendMsgBtn.ZIndex = 4
-SendMsgBtn.Parent = InputContainer
+    UI.TextBox = Instance.new("TextBox")
+    UI.TextBox.Size = UDim2.new(1, -44, 1, 0)
+    UI.TextBox.Position = UDim2.new(0, 8, 0, 0)
+    UI.TextBox.BackgroundTransparency = 1
+    UI.TextBox.ClearTextOnFocus = false
+    UI.TextBox.Font = Enum.Font.GothamMedium
+    UI.TextBox.PlaceholderText = "Скрытое сообщение юзерам хаба (макс. 200 симв.)..."
+    UI.TextBox.PlaceholderColor3 = Color3.fromRGB(160, 130, 200)
+    UI.TextBox.Text = ""
+    UI.TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    UI.TextBox.TextSize = 11
+    UI.TextBox.TextXAlignment = Enum.TextXAlignment.Left
+    UI.TextBox.ZIndex = 4
+    UI.TextBox.Parent = inputContainer
 
-local SendCorner = Instance.new("UICorner")
-SendCorner.CornerRadius = UDim.new(0, 4)
-SendCorner.Parent = SendMsgBtn
+    UI.TextBox:GetPropertyChangedSignal("Text"):Connect(function()
+        if #UI.TextBox.Text > 200 then
+            UI.TextBox.Text = string.sub(UI.TextBox.Text, 1, 200)
+        end
+    end)
 
--- Отображение сообщения в UI
+    UI.SendBtn = Instance.new("TextButton")
+    UI.SendBtn.Size = UDim2.new(0, 32, 0, 26)
+    UI.SendBtn.Position = UDim2.new(1, -34, 0.5, -13)
+    UI.SendBtn.BackgroundColor3 = Color3.fromRGB(70, 20, 120)
+    UI.SendBtn.BackgroundTransparency = 0.2
+    UI.SendBtn.BorderColor3 = Color3.fromRGB(190, 80, 255)
+    UI.SendBtn.BorderSizePixel = 1
+    UI.SendBtn.Text = "➤"
+    UI.SendBtn.Font = Enum.Font.GothamBold
+    UI.SendBtn.TextSize = 14
+    UI.SendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    UI.SendBtn.ZIndex = 4
+    UI.SendBtn.Parent = inputContainer
+
+    local sendCorner = Instance.new("UICorner")
+    sendCorner.CornerRadius = UDim.new(0, 4)
+    sendCorner.Parent = UI.SendBtn
+end
+
 local function addChatMessage(senderName: string, text: string, isLocal: boolean)
-    local msgRow = Instance.new("Frame")
-    msgRow.Size = UDim2.new(1, -6, 0, 0)
-    msgRow.AutomaticSize = Enum.AutomaticSize.Y
-    msgRow.BackgroundColor3 = isLocal and Color3.fromRGB(55, 20, 90) or Color3.fromRGB(30, 14, 52)
-    msgRow.BackgroundTransparency = 0.2
-    msgRow.BorderColor3 = isLocal and Color3.fromRGB(200, 100, 255) or Color3.fromRGB(130, 50, 180)
-    msgRow.BorderSizePixel = 1
-    msgRow.ZIndex = 5
-    msgRow.Parent = ChatScrolling
+    do
+        local row = Instance.new("Frame")
+        row.Size = UDim2.new(1, -6, 0, 0)
+        row.AutomaticSize = Enum.AutomaticSize.Y
+        row.BackgroundColor3 = isLocal and Color3.fromRGB(55, 20, 90) or Color3.fromRGB(30, 14, 52)
+        row.BackgroundTransparency = 0.2
+        row.BorderColor3 = isLocal and Color3.fromRGB(200, 100, 255) or Color3.fromRGB(130, 50, 180)
+        row.BorderSizePixel = 1
+        row.ZIndex = 5
+        row.Parent = UI.Scrolling
 
-    local rowCorner = Instance.new("UICorner")
-    rowCorner.CornerRadius = UDim.new(0, 6)
-    rowCorner.Parent = msgRow
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = row
 
-    local rowPadding = Instance.new("UIPadding")
-    rowPadding.PaddingLeft = UDim.new(0, 8)
-    rowPadding.PaddingRight = UDim.new(0, 8)
-    rowPadding.PaddingTop = UDim.new(0, 4)
-    rowPadding.PaddingBottom = UDim.new(0, 4)
-    rowPadding.Parent = msgRow
+        local pad = Instance.new("UIPadding")
+        pad.PaddingLeft = UDim.new(0, 8)
+        pad.PaddingRight = UDim.new(0, 8)
+        pad.PaddingTop = UDim.new(0, 4)
+        pad.PaddingBottom = UDim.new(0, 4)
+        pad.Parent = row
 
-    local msgLabel = Instance.new("TextLabel")
-    msgLabel.Size = UDim2.new(1, 0, 0, 0)
-    msgLabel.AutomaticSize = Enum.AutomaticSize.Y
-    msgLabel.BackgroundTransparency = 1
-    msgLabel.Font = Enum.Font.GothamMedium
-    msgLabel.TextSize = 10
-    msgLabel.TextWrapped = true
-    msgLabel.TextXAlignment = Enum.TextXAlignment.Left
-    msgLabel.RichText = true
-    msgLabel.ZIndex = 6
-    local colorHex = isLocal and "#df99ff" or "#85e0ff"
-    msgLabel.Text = string.format("<font color='%s'><b>%s:</b></font> <font color='#ffffff'>%s</font>", colorHex, senderName, text)
-    msgLabel.Parent = msgRow
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, 0, 0, 0)
+        label.AutomaticSize = Enum.AutomaticSize.Y
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.GothamMedium
+        label.TextSize = 10
+        label.TextWrapped = true
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.RichText = true
+        label.ZIndex = 6
+        local colorHex = isLocal and "#df99ff" or "#85e0ff"
+        label.Text = string.format("<font color='%s'><b>%s:</b></font> <font color='#ffffff'>%s</font>", colorHex, senderName, text)
+        label.Parent = row
+    end
 
     task.defer(function()
-        ChatScrolling.CanvasPosition = Vector2.new(0, 999999)
+        UI.Scrolling.CanvasPosition = Vector2.new(0, 999999)
     end)
 
     if not isLocal then
-        playSound("rbxassetid://9114221317", 0.25, 1.4)
-        if not ChatPage.Visible then
+        if typeof(playSound) == "function" then
+            pcall(playSound, "rbxassetid://6518811702", 0.25, 1.4)
+        end
+        if not ChatPage.Visible and typeof(sendNotification) == "function" then
             sendNotification("💬 [" .. senderName .. "]: " .. text, 3.5)
         end
     end
 end
 
--- Канал передачи через сетевой контейнер персонажа
-local function getOrCreateCommsChannel(character: Model): StringValue?
-    local channel = character:FindFirstChild("TysClientComms") :: StringValue?
-    if not channel then
-        channel = Instance.new("StringValue")
-        channel.Name = "TysClientComms"
-        channel.Value = ""
-        channel.Parent = character
-    end
-    return channel
-end
+-- ------------------------------------------------------------------------------
+-- СЕТЕВАЯ ЧАСТЬ (FIREBASE REST API)
+-- ------------------------------------------------------------------------------
+local FIREBASE_BASE = "https://tys-chat-8cfc2-default-rtdb.firebaseio.com"
+local roomKey = (game.JobId ~= "" and game.JobId) or "GlobalTestRoom"
 
-local msgCounter = 0
+local chatPostUrl = string.format("%s/chats/%s.json", FIREBASE_BASE, roomKey)
+local chatGetUrl = string.format('%s/chats/%s.json?orderBy="$key"&limitToLast=20', FIREBASE_BASE, roomKey)
+
+local httpRequest = request or http_request or (syn and syn.request) or (http and http.request)
+local processedMessageIds = {}
+
 local function sendSecretMessage()
-    local text = ChatTextBox.Text
+    local text = UI.TextBox.Text
     if not text or text:gsub("%s+", "") == "" then return end
-    ChatTextBox.Text = ""
-    playClickSound()
 
-    local char = LocalPlayer.Character
-    if not char then
-        sendNotification("⚠️ Персонаж не загружен!")
+    if #text > 200 then
+        text = string.sub(text, 1, 200)
+    end
+
+    UI.TextBox.Text = ""
+    if typeof(playClickSound) == "function" then
+        pcall(playClickSound)
+    end
+
+    local senderName = LocalPlayer.DisplayName .. " (@" .. LocalPlayer.Name .. ")"
+    addChatMessage(senderName, text, true)
+
+    if not httpRequest then
+        if typeof(sendNotification) == "function" then
+            sendNotification("⚠️ HTTP запросы не поддерживаются!", 3)
+        end
         return
     end
 
-    local comms = getOrCreateCommsChannel(char)
-    if comms then
-        msgCounter = msgCounter + 1
-        -- Пакет: ID сообщения + разделитель + текст
-        comms.Value = tostring(msgCounter) .. "||" .. text
-    end
+    local payload = HttpService:JSONEncode({
+        sender = senderName,
+        senderId = LocalPlayer.UserId,
+        text = text,
+        timestamp = os.time()
+    })
 
-    local myName = LocalPlayer.DisplayName .. " (@" .. LocalPlayer.Name .. ")"
-    addChatMessage(myName, text, true)
+    task.spawn(function()
+        pcall(function()
+            httpRequest({
+                Url = chatPostUrl,
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body = payload
+            })
+        end)
+    end)
 end
 
-SendMsgBtn.MouseButton1Click:Connect(sendSecretMessage)
-ChatTextBox.FocusLost:Connect(function(enterPressed)
+UI.SendBtn.MouseButton1Click:Connect(sendSecretMessage)
+UI.TextBox.FocusLost:Connect(function(enterPressed)
     if enterPressed then
         sendSecretMessage()
     end
 end)
 
--- Слушатель входящих данных от других игроков
-local function listenToPlayerComms(player: Player)
-    if player == LocalPlayer then return end
+task.spawn(function()
+    while task.wait(2.5) do
+        if httpRequest then
+            local success, res = pcall(function()
+                return httpRequest({
+                    Url = chatGetUrl,
+                    Method = "GET"
+                })
+            end)
 
-    local lastReceivedId = ""
-    local function hookCharacter(char: Model)
-        local function checkChannel(child: Instance)
-            if child.Name == "TysClientComms" and child:IsA("StringValue") then
-                child.Changed:Connect(function(newVal)
-                    if newVal ~= "" then
-                        local parts = string.split(newVal, "||")
-                        if #parts >= 2 then
-                            local id = parts[1]
-                            local content = table.concat(parts, "||", 2)
-                            if id ~= lastReceivedId then
-                                lastReceivedId = id
-                                local senderName = player.DisplayName .. " (@" .. player.Name .. ")"
-                                addChatMessage(senderName, content, false)
+            if success and res and (res.StatusCode == 200 or res.StatusMessage == "OK" or not res.StatusCode) and res.Body and res.Body ~= "null" then
+                local decodeOk, data = pcall(function()
+                    return HttpService:JSONDecode(res.Body)
+                end)
+
+                if decodeOk and type(data) == "table" then
+                    for msgId, msgData in pairs(data) do
+                        if not processedMessageIds[msgId] then
+                            processedMessageIds[msgId] = true
+
+                            if msgData.senderId ~= LocalPlayer.UserId then
+                                addChatMessage(msgData.sender, msgData.text, false)
                             end
                         end
                     end
-                end)
+                end
             end
         end
-
-        char.ChildAdded:Connect(checkChannel)
-        local existing = char:FindFirstChild("TysClientComms")
-        if existing then
-            checkChannel(existing)
-        end
     end
-
-    if player.Character then
-        hookCharacter(player.Character)
-    end
-    player.CharacterAdded:Connect(hookCharacter)
-end
-
-for _, p in ipairs(Players:GetPlayers()) do
-    listenToPlayerComms(p)
-end
-Players.PlayerAdded:Connect(listenToPlayerComms)
-
-if LocalPlayer.Character then
-    getOrCreateCommsChannel(LocalPlayer.Character)
-end
-LocalPlayer.CharacterAdded:Connect(function(char)
-    getOrCreateCommsChannel(char)
 end)
 
 -- ==============================================================================
