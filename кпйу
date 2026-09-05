@@ -2437,16 +2437,32 @@ end)
 -- Вкладка Чат между юзерами
 -- ==============================================================================
 -- ==============================================================================
--- Вкладка Скрытый Чат между юзерами (Оптимизировано под лимит 200 регистров)
+-- Вкладка Скрытый Чат между юзерами (С уведомлениями и звуком)
 -- ==============================================================================
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 
 local ChatPage = Pages.UserChat
 
--- Хранилище ссылок на нужные элементы без лишних локальных переменных
+-- Хранилище ссылок на нужные элементы без переполнения локальных регистров
 local UI = {}
+
+-- Функция вызова всплывающего системного уведомления
+local function triggerNotification(title: string, text: string)
+    if typeof(sendNotification) == "function" then
+        sendNotification(title .. ": " .. text, 4)
+    else
+        pcall(function()
+            StarterGui:SetCore("SendNotification", {
+                Title = title,
+                Text = text,
+                Duration = 4
+            })
+        end)
+    end
+end
 
 do
     local header = Instance.new("TextLabel")
@@ -2598,12 +2614,16 @@ local function addChatMessage(senderName: string, text: string, isLocal: boolean
         UI.Scrolling.CanvasPosition = Vector2.new(0, 999999)
     end)
 
+    -- Если сообщение от другого пользователя
     if not isLocal then
+        -- Проигрываем звук уведомления
         if typeof(playSound) == "function" then
-            pcall(playSound, "rbxassetid://6518811702", 0.25, 1.4)
+            pcall(playSound, "rbxassetid://6518811702", 0.3, 1.2)
         end
-        if not ChatPage.Visible and typeof(sendNotification) == "function" then
-            sendNotification("💬 [" .. senderName .. "]: " .. text, 3.5)
+        
+        -- Показываем уведомление, если страница чата сейчас закрыта/не активна
+        if not ChatPage.Visible then
+            triggerNotification("💬 " .. senderName, text)
         end
     end
 end
@@ -2637,9 +2657,7 @@ local function sendSecretMessage()
     addChatMessage(senderName, text, true)
 
     if not httpRequest then
-        if typeof(sendNotification) == "function" then
-            sendNotification("⚠️ HTTP запросы не поддерживаются!", 3)
-        end
+        triggerNotification("⚠️ Ошибка чата", "HTTP запросы не поддерживаются эксплойтом!")
         return
     end
 
@@ -2699,7 +2717,6 @@ task.spawn(function()
         end
     end
 end)
-
 -- ==============================================================================
 -- Вкладка Сторонние скрипты
 -- ==============================================================================
