@@ -13,7 +13,8 @@ local StarterGui = game:GetService("StarterGui")
 StarterGui:SetCore("SendNotification", {
     Title = "Tys Client",
     Text = "Script loading...",
-    Duration = 5,
+    Duration = 15,
+    Button1 = "Close",
     Icon = "rbxassetid://6646175684"
 })
 
