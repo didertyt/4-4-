@@ -11,7 +11,7 @@
 
 local StarterGui = game:GetService("StarterGui")
 StarterGui:SetCore("SendNotification", {
-    Title = "Tys Client",
+    Title = "Tys Loader",
     Text = "Script loading...",
     Duration = 15,
     Button1 = "Close",
