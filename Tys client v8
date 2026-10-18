@@ -25,6 +25,18 @@ StarterGui:SetCore("SendNotification", {
     Button1 = "Close"
 })
 
+local DISCORD_LINK = "https://discord.gg/NzBAaERgS"
+local bindable = Instance.new("BindableFunction")
+bindable.OnInvoke = function()
+	setclipboard(DISCORD_LINK)
+end
+StarterGui:SetCore("SendNotification", {
+	Title = "Tys Client V8.1",
+	Text = "Script patched because new update in Legends Battlegrounds, pls join discord bro",
+	Duration = 10000000,
+	Button1 = "Join Discord",
+	Callback = bindable
+})
 
 
 -- if you see this, you stupid skidder
