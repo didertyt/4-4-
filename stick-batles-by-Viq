@@ -3,7 +3,7 @@ local bindable = Instance.new("BindableFunction")
 function bindable.OnInvoke(buttonText)
     if buttonText == "Join Discord" then
         if setclipboard then
-            setclipboard("https://discord.gg/your-discord-link")
+            setclipboard("https://discord.gg/NzBAaERgS")
         end
     end
 end
