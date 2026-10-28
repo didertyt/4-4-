@@ -1,21 +1,26 @@
---
+-- 67
 --  ████████╗██╗   ██╗███████╗     ██████╗██╗     ██╗███████╗███╗   ██╗████████╗
 --  ╚══██╔══╝╚██╗ ██╔╝██╔════╝    ██╔════╝██║     ██║██╔════╝████╗  ██║╚══██╔══╝
 --     ██║    ╚████╔╝ ███████╗    ██║     ██║     ██║█████╗  ██╔██╗ ██║   ██║
 --     ██║     ╚██╔╝  ╚════██║    ██║     ██║     ██║██╔══╝  ██║╚██╗██║   ██║
 --     ██║      ██║   ███████║    ╚██████╗███████╗██║███████╗██║ ╚████║   ██║
 --     ╚═╝      ╚═╝   ╚══════╝     ╚═════╝╚══════╝╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝
---                ★  B E T A   E D I T I O N  ★
---      Owner: Viq |  Devs: Tys Client Team  |  v1.0 beta
---      Discord: https://discord.gg/NzBAaERgS
+--                ★  B E T A  E D I T I O N  ★
+--      Owner: Viq & Xiq|  Devs: Tys Client Team  |  beta
+--      Discord: https://discord.gg/Jr8BKnUBY
 
 local StarterGui = game:GetService("StarterGui")
+local DISCORD_LINK = "https://discord.gg/Jr8BKnUBY"
+local bindable = Instance.new("BindableFunction")
+bindable.OnInvoke = function()
+	setclipboard(DISCORD_LINK)
+end
 StarterGui:SetCore("SendNotification", {
-    Title = "Tys Loader",
-    Text = "Script loading...",
-    Duration = 15,
-    Button1 = "Close",
-    Icon = "rbxassetid://6646175684"
+	Title = "Tys Client",
+	Text = "pls join discord broo",
+	Duration = 10000000,
+	Button1 = "Join Discord",
+	Callback = bindable
 })
 -- you stupid skidder
 loadstring(game:HttpGet("https://voidedx.vercel.app/api/raw?id=vx_qbfk7vnf"))()
