@@ -7,7 +7,7 @@
 --     ╚═╝      ╚═╝   ╚══════╝     ╚═════╝╚══════╝╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝
 --                ★  P U R P L E  E D I T I O N  ★
 --      Owner: Viq & Xiq|  Devs: Tys Client Team  |  v8.1
---      Discord: https://discord.gg/NzBAaERgS
+--      Discord: https://discord.gg/Jr8BKnUBY
 
 local StarterGui = game:GetService("StarterGui")
 StarterGui:SetCore("SendNotification", {
@@ -25,7 +25,7 @@ StarterGui:SetCore("SendNotification", {
     Button1 = "Close"
 })
 
-local DISCORD_LINK = "https://discord.gg/NzBAaERgS"
+local DISCORD_LINK = "https://discord.gg/Jr8BKnUBY"
 local bindable = Instance.new("BindableFunction")
 bindable.OnInvoke = function()
 	setclipboard(DISCORD_LINK)
