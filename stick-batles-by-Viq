@@ -1,23 +1,27 @@
+-- 67
+--  ████████╗██╗   ██╗███████╗     ██████╗██╗     ██╗███████╗███╗   ██╗████████╗
+--  ╚══██╔══╝╚██╗ ██╔╝██╔════╝    ██╔════╝██║     ██║██╔════╝████╗  ██║╚══██╔══╝
+--     ██║    ╚████╔╝ ███████╗    ██║     ██║     ██║█████╗  ██╔██╗ ██║   ██║
+--     ██║     ╚██╔╝  ╚════██║    ██║     ██║     ██║██╔══╝  ██║╚██╗██║   ██║
+--     ██║      ██║   ███████║    ╚██████╗███████╗██║███████╗██║ ╚████║   ██║
+--     ╚═╝      ╚═╝   ╚══════╝     ╚═════╝╚══════╝╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝
+--                ★  B E T A  E D I T I O N  ★
+--      Owner: Viq & Xiq|  Devs: Tys Client Team  |  beta
+--      Discord: https://discord.gg/Jr8BKnUBY
+
+local StarterGui = game:GetService("StarterGui")
+local DISCORD_LINK = "https://discord.gg/Jr8BKnUBY"
 local bindable = Instance.new("BindableFunction")
-
-function bindable.OnInvoke(buttonText)
-    if buttonText == "Join Discord" then
-        if setclipboard then
-            setclipboard("https://discord.gg/NzBAaERgS")
-        end
-    end
+bindable.OnInvoke = function()
+	setclipboard(DISCORD_LINK)
 end
-
-pcall(function()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Tys Client",
-        Text = "Script not working on phone, pls join discord, we are have more scripts",
-        Duration = 10000000,
-        Button1 = "Join Discord",
-        Callback = bindable
-    })
-end)
-
+StarterGui:SetCore("SendNotification", {
+	Title = "Tys Client",
+	Text = "pls join discord broo",
+	Duration = 10000000,
+	Button1 = "Join Discord",
+	Callback = bindable
+})
 
 
 
