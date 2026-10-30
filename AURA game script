@@ -7,7 +7,7 @@
 --     ╚═╝      ╚═╝   ╚══════╝     ╚═════╝╚══════╝╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝
 --                ★  B E T A  E D I T I O N  ★
 --      Owner: Viq & Xiq|  Devs: Tys Client Team  |  beta
---      Discord: https://discord.gg/Jr8BKnUBY
+--      Discord: https://discord.gg/2TbMGfqsPv
 
 local StarterGui = game:GetService("StarterGui")
 local DISCORD_LINK = "https://discord.gg/2TbMGfqsPv"
