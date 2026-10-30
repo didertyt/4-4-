@@ -7,7 +7,7 @@
 --     ╚═╝      ╚═╝   ╚══════╝     ╚═════╝╚══════╝╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝
 --                ★  P U R P L E  E D I T I O N  ★
 --      Owner: Viq & Xiq|  Devs: Tys Client Team  |  v8.1
---      Discord: https://discord.gg/Jr8BKnUBY
+--      Discord: https://discord.gg/2TbMGfqsPv
 
 local StarterGui = game:GetService("StarterGui")
 StarterGui:SetCore("SendNotification", {
