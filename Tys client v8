@@ -25,7 +25,7 @@ StarterGui:SetCore("SendNotification", {
     Button1 = "Close"
 })
 
-local DISCORD_LINK = "https://discord.gg/Jr8BKnUBY"
+local DISCORD_LINK = "https://discord.gg/2TbMGfqsPv"
 local bindable = Instance.new("BindableFunction")
 bindable.OnInvoke = function()
 	setclipboard(DISCORD_LINK)
