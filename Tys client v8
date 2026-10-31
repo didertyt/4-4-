@@ -31,8 +31,8 @@ bindable.OnInvoke = function()
 	setclipboard(DISCORD_LINK)
 end
 StarterGui:SetCore("SendNotification", {
-	Title = "Tys Client V8.1",
-	Text = "Script patched because new update in Legends Battlegrounds, pls join discord bro",
+	Title = "Tys Client V8.2",
+	Text = "Script updated to V8.2, enjoy it !",
 	Duration = 10000000,
 	Button1 = "Join Discord",
 	Callback = bindable
