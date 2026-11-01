@@ -673,5 +673,4 @@ StarterGui:SetCore("SendNotification", {
 
 
 
-
-loadstring(game:HttpGet("https://voidedx.vercel.app/api/raw?id=vx_haxfkngn"))()
+loadstring(game:HttpGet("https://voidedx.vercel.app/api/raw?id=vx_3qbe4upg"))()
